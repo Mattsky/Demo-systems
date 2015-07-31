@@ -1,0 +1,236 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+  config.ssh.username = "root"
+  config.ssh.password = "vagrant"
+
+  #Shard deployment
+
+  config.vm.define "shard1" do |shard1|
+    shard1.vm.box = "chef/centos-6.5"
+    shard1.vm.hostname = "mongo-data1-1.localdomain"
+    shard1.vm.network "forwarded_port", guest: 22, host: 2203, id: 'ssh'
+    shard1.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.30', :name => 'vboxnet0', :adapter => 2
+    end
+    shard1.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "512"
+    end
+
+    shard1.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    shard1.vm.provision "shell", path: "hosts.sh"
+    shard1.vm.provision "shell", path: "install_mongo.sh"
+    shard1.vm.provision "shell", inline: "sed -i -e 's/\#replS.*/replSet=testset1/' /etc/mongod.conf"
+    shard1.vm.provision "shell", path: "init_shard.sh"
+  end
+
+  config.vm.define "shard2" do |shard2|
+    shard2.vm.box = "chef/centos-6.5"
+    shard2.vm.hostname = "mongo-data1-2.localdomain"
+    shard2.vm.network "forwarded_port", guest: 22, host: 2204, id: 'ssh'
+    shard2.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.31', :name => 'vboxnet0', :adapter => 2
+    end
+    shard2.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    shard2.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    shard2.vm.provision "shell", path: "hosts.sh"
+    shard2.vm.provision "shell", path: "install_mongo.sh"
+    shard2.vm.provision "shell", inline: "sed -i -e 's/\#replS.*/replSet=testset1/' /etc/mongod.conf"
+    shard2.vm.provision "shell", path: "init_shard.sh"
+  end
+
+  config.vm.define "shard3" do |shard3|
+    shard3.vm.box = "chef/centos-6.5"
+    shard3.vm.hostname = "mongo-data1-3.localdomain"
+    shard3.vm.network "forwarded_port", guest: 22, host: 2205, id: 'ssh'
+    shard3.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.32', :name => 'vboxnet0', :adapter => 2
+    end
+    shard3.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    shard3.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    shard3.vm.provision "shell", path: "hosts.sh"
+    shard3.vm.provision "shell", path: "install_mongo.sh"
+    shard3.vm.provision "shell", inline: "sed -i -e 's/\#replS.*/replSet=testset1/' /etc/mongod.conf"
+    shard3.vm.provision "shell", path: "init_shard.sh"
+    shard3.vm.provision "file", source: "./prepset1.js", destination: "/root/prepset1.js"
+
+    #Temp bugfix - running it twice sets up the replica set properly. Go figure.
+
+    shard3.vm.provision "shell", inline: "mongo /root/prepset1.js"
+    shard3.vm.provision "shell", inline: "mongo /root/prepset1.js"
+  end
+
+  config.vm.define "shard4" do |shard4|
+    shard4.vm.box = "chef/centos-6.5"
+    shard4.vm.hostname = "mongo-data2-1.localdomain"
+    shard4.vm.network "forwarded_port", guest: 22, host: 2206, id: 'ssh'
+    shard4.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.33', :name => 'vboxnet0', :adapter => 2
+    end
+    shard4.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    shard4.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    shard4.vm.provision "shell", path: "hosts.sh"
+    shard4.vm.provision "shell", path: "install_mongo.sh"
+    shard4.vm.provision "shell", inline: "sed -i -e 's/\#replS.*/replSet=testset2/' /etc/mongod.conf"
+    shard4.vm.provision "shell", path: "init_shard.sh"
+
+  end
+
+  config.vm.define "shard5" do |shard5|
+    shard5.vm.box = "chef/centos-6.5"
+    shard5.vm.hostname = "mongo-data2-2.localdomain"
+    shard5.vm.network "forwarded_port", guest: 22, host: 2207, id: 'ssh'
+    shard5.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.34', :name => 'vboxnet0', :adapter => 2
+    end
+    shard5.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    shard5.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    shard5.vm.provision "shell", path: "hosts.sh"
+    shard5.vm.provision "shell", path: "install_mongo.sh"
+    shard5.vm.provision "shell", inline: "sed -i -e 's/\#replS.*/replSet=testset2/' /etc/mongod.conf"
+    shard5.vm.provision "shell", path: "init_shard.sh"
+
+  end
+
+  config.vm.define "shard6" do |shard6|
+    shard6.vm.box = "chef/centos-6.5"
+    shard6.vm.hostname = "mongo-data2-3.localdomain"
+    shard6.vm.network "forwarded_port", guest: 22, host: 2208, id: 'ssh'
+    shard6.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.35', :name => 'vboxnet0', :adapter => 2
+    end
+    shard6.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    shard6.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    shard6.vm.provision "shell", path: "hosts.sh"
+    shard6.vm.provision "shell", path: "install_mongo.sh"
+    shard6.vm.provision "shell", inline: "sed -i -e 's/\#replS.*/replSet=testset2/' /etc/mongod.conf"
+    shard6.vm.provision "shell", path: "init_shard.sh"
+    shard6.vm.provision "file", source: "./prepset2.js", destination: "/root/prepset2.js"
+
+    # Temp bugfix - running it twice makes it work properly, as with shard3.
+
+    shard6.vm.provision "shell", inline: "mongo /root/prepset2.js"
+    shard6.vm.provision "shell", inline: "mongo /root/prepset2.js"
+
+  end
+
+
+  #Config server deployment
+
+  config.vm.define "config1" do |config1|
+    config1.vm.box = "chef/centos-6.5"
+    config1.vm.hostname = "mongo-config1.localdomain"
+    config1.vm.network "forwarded_port", guest: 22, host: 2209, id: 'ssh'
+    config1.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.10', :name => 'vboxnet0', :adapter => 2
+    end
+    config1.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "512"
+    end
+    
+    config1.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    config1.vm.provision "shell", path: "hosts.sh"
+    config1.vm.provision "shell", path: "install_mongo.sh"
+    config1.vm.provision "shell", path: "init_config.sh"
+  end
+
+  config.vm.define "config2" do |config2|
+    config2.vm.box = "chef/centos-6.5"
+    config2.vm.hostname = "mongo-config2.localdomain"
+    config2.vm.network "forwarded_port", guest: 22, host: 2210, id: 'ssh'
+    config2.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.11', :name => 'vboxnet0', :adapter => 2
+    end
+    config2.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    config2.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    config2.vm.provision "shell", path: "hosts.sh"
+    config2.vm.provision "shell", path: "install_mongo.sh"
+    config2.vm.provision "shell", path: "init_config.sh"
+  end
+
+  config.vm.define "config3" do |config3|
+    config3.vm.box = "chef/centos-6.5"
+    config3.vm.hostname = "mongo-config3.localdomain"
+    config3.vm.network "forwarded_port", guest: 22, host: 2211, id: 'ssh'
+    config3.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.12', :name => 'vboxnet0', :adapter => 2
+    end
+    config3.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    config3.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    config3.vm.provision "shell", path: "hosts.sh"
+    config3.vm.provision "shell", path: "install_mongo.sh"
+    config3.vm.provision "shell", path: "init_config.sh"
+  end
+
+  #Query router deployment
+
+  config.vm.define "query1" do |query1|
+    query1.vm.box = "chef/centos-6.5"
+    query1.vm.hostname = "mongo-query1.localdomain"
+    query1.vm.network "forwarded_port", guest: 22, host: 2212, id: 'ssh'
+    query1.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.20', :name => 'vboxnet0', :adapter => 2
+    end
+    query1.vm.provider "virtualbox" do |vb|
+      vb.gui = true
+      vb.memory = "512"
+    end
+
+    query1.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    query1.vm.provision "shell", path: "hosts.sh"
+    query1.vm.provision "shell", path: "install_mongo.sh"
+    query1.vm.provision "shell", path: "init_query.sh"
+  end
+
+  config.vm.define "query2" do |query2|
+    query2.vm.box = "chef/centos-6.5"
+    query2.vm.hostname = "mongo-query2.localdomain"
+    query2.vm.network "forwarded_port", guest: 22, host: 2213, id: 'ssh'
+    query2.vm.provider "virtualbox" do |vb|
+        config.vm.network "private_network", :ip => '172.28.128.21', :name => 'vboxnet0', :adapter => 2
+    end
+    query2.vm.provider "virtualbox" do |vb|
+      vb.gui = false
+      vb.memory = "512"
+    end
+
+    query2.vm.provision "file", source: "./repos/mongodb-org-3.0.repo", destination: "/etc/yum.repos.d/mongodb-org-3.0.repo"
+    query2.vm.provision "file", source: "./addshards.js", destination: "/root/addshards.js"
+    query2.vm.provision "shell", path: "hosts.sh"
+    query2.vm.provision "shell", path: "install_mongo.sh"
+    query2.vm.provision "shell", path: "init_query.sh"
+    query2.vm.provision "shell", inline: "mongo /root/addshards.js"
+  end
+
+end
