@@ -1,0 +1,49 @@
+---
+- hosts: elkclient
+  remote_user: vagrant
+  tasks:
+  - name: install dependencies
+    yum: pkg={{item}} state=latest
+    with_items:
+    - libselinux-python
+
+  - name: create root SSH dir
+    file: path=/root/.ssh owner=root group=root mode=0700 state=directory
+
+  - name: copy Vagrant key into place
+    copy: src=./.vagrant/machines/elkserver/virtualbox/private_key dest=/root/.ssh/vagrant mode=0600
+
+  - name: scan ELK server for SSH access
+    shell: ssh-keyscan 172.28.128.100 >> /root/.ssh/known_hosts
+
+  - name: move Logstash forwarding certificate from ELK server to client
+    shell: scp -i /root/.ssh/vagrant vagrant@172.28.128.100:/etc/pki/tls/certs/logstash-forwarder.crt /tmp
+
+  - name: move Logstash forwarding cert to correct location
+    shell: mv /tmp/logstash-forwarder.crt /etc/pki/tls/certs
+
+  - name: install Logstash forwarder package
+    yum: name=http://download.elasticsearch.org/logstash-forwarder/packages/logstash-forwarder-0.3.1-1.x86_64.rpm state=present disable_gpg_check=yes
+
+  - name: remove default Logstash init script
+    shell: rm -f /etc/init.d/logstash_forwarder
+
+  - name: install Logstash init script
+    #copy: src=./forwarder/initscript dest=/etc/init.d/logstash_forwarder mode=0755
+    get_url: url=http://logstashbook.com/code/4/logstash_forwarder_redhat_init dest=/etc/init.d/logstash-forwarder force=yes
+
+  - name: install Logstash forwarder config file
+    copy: src=./forwarder/logstash-forwarder dest=/etc/logstash-forwarder
+
+  - name: install Logstash forwarder sysconfig file
+    get_url: url=http://logstashbook.com/code/4/logstash_forwarder_redhat_sysconfig dest=/etc/sysconfig/logstash-forwarder owner=root group=root mode=0644
+
+  - name: tweak Logstash forwarder settings
+    command: /bin/sed -i -e 's/LOGSTASH_FORWARDER.*/LOGSTASH_FORWARDER_OPTIONS\=\"\-config\ \/etc\/logstash\-forwarder\ \-spool\-size\ 100\"/' /etc/sysconfig/logstash-forwarder
+
+  - name: add the Logstash forwarder to services
+    command: chkconfig --add logstash-forwarder
+
+  - name: start the Logstash forwarder!
+    service: name=logstash-forwarder state=started
+  
