@@ -1,0 +1,22 @@
+---
+- name: ensure MongoD is stopped
+  service: name=mongod enabled=false state=stopped
+
+- name: copy mongos init script to init.d
+  copy: src=mongos.init dest=/etc/init.d/mongos owner=root group=root mode=0755
+
+- name: copy mongos config file
+  copy: src=mongos.conf dest=/etc/mongos.conf owner=root group=root mode=0644
+
+- name: create dummy sysconfig file
+  file: path=/etc/sysconfig/mongos state=touch mode=0644 owner=root group=root
+
+- name: create empty mongos logfile
+  file: path=/var/log/mongodb/mongos.log state=touch mode=0644 owner=mongod group=mongod
+
+- name: add mongos to chkconfig
+  command: chkconfig --add mongos
+
+- name: enable mongos service
+  service: name=mongos enabled=yes
+

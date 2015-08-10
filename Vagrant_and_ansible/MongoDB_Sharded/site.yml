@@ -1,0 +1,36 @@
+---
+- name: Install and configure Mongo on target systems for sharding
+  hosts: all
+  roles:
+  - role: common
+
+- name: Configure shard specific settings
+  hosts: shard_servers
+  roles:
+  - role: shard
+
+- name: Configure config server specific settings
+  hosts: config_servers
+  roles:
+  - role: config
+
+- name: Configure query router servers
+  hosts: query_servers
+  roles:
+  - role: query
+
+- name: Start up query server mongos instances
+  hosts: query_servers
+  tasks:
+  - service: name=mongos state=started
+
+- name: Copy addshards.js file to query server 2
+  hosts: query2
+  tasks:
+  - copy: src=addshards.js dest=/tmp/addshards.js
+
+- name: Create test data 
+  hosts: query2
+  tasks:  
+  - command: mongo /tmp/addshards.js
+

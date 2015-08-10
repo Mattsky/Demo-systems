@@ -1,0 +1,31 @@
+---
+- name: ensure SELinux bindings are available for dependencies
+  yum: pkg=libselinux-python state=present
+
+- name: ensure MongoDB repo is present
+  copy: src=mongodb-org-3.0.repo dest=/etc/yum.repos.d/mongodb-org-3.0.repo 
+
+- name: update hosts file information
+#  lineinfile: dest=/etc/hosts line="172.28.128.10             mongo-config1.localdomain"
+#  lineinfile: dest=/etc/hosts line="172.28.128.11             mongo-config2.localdomain" insertafter="^172.28.128.10"
+#  lineinfile: dest=/etc/hosts line="172.28.128.12             mongo-config3.localdomain" insertafter="^172.28.128.11"
+#  lineinfile: dest=/etc/hosts line="172.28.128.20             mongo-query1.localdomain" insertafter="^172.28.128.12"
+#  lineinfile: dest=/etc/hosts line="172.28.128.21             mongo-query2.localdomain" insertafter="^172.28.128.20"
+#  lineinfile: dest=/etc/hosts line="172.28.128.30             mongo-shard1.localdomain" insertafter="^172.28.128.21"
+#  lineinfile: dest=/etc/hosts line="172.28.128.31             mongo-shard2.localdomain" insertafter="^172.28.128.30"
+#  lineinfile: dest=/etc/hosts line="172.28.128.32             mongo-shard3.localdomain" insertafter="^172.28.128.31"
+#  lineinfile: dest=/etc/hosts line="172.28.128.33             mongo-shard4.localdomain" insertafter="^172.28.128.32"
+  lineinfile: dest=/etc/hosts regexp="{{ item }}" insertafter="^::1" line="{{ item }}"
+  with_items:
+  - '172.28.128.10             mongo-config1.localdomain'
+  - '172.28.128.11             mongo-config2.localdomain'
+  - '172.28.128.12             mongo-config3.localdomain'
+  - '172.28.128.20             mongo-query1.localdomain'
+  - '172.28.128.21             mongo-query2.localdomain'
+  - '172.28.128.30             mongo-shard1.localdomain'
+  - '172.28.128.31             mongo-shard2.localdomain'
+  - '172.28.128.32             mongo-shard3.localdomain'
+  - '172.28.128.33             mongo-shard4.localdomain'
+
+- name: install MongoDB stable release (v3)
+  yum: pkg=mongodb-org state=present

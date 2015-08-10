@@ -1,0 +1,10 @@
+---
+- name: configure MongoDB config file
+  replace: dest=/etc/mongod.conf regexp='^bind_ip' replace='#bind_ip'
+
+- name: create MongoDB data directory
+  file: path=/data/db state=directory mode=0777
+
+- name: activate MongoD service on boot, and start it now
+  service: name=mongod enabled=yes state=started
+    
