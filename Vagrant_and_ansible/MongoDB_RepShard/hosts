@@ -1,0 +1,16 @@
+[shard_servers]
+shard1 ansible_ssh_port=2203 ansible_ssh_host=127.0.0.1
+shard2 ansible_ssh_port=2204 ansible_ssh_host=127.0.0.1
+shard3 ansible_ssh_port=2205 ansible_ssh_host=127.0.0.1
+shard4 ansible_ssh_port=2206 ansible_ssh_host=127.0.0.1
+shard5 ansible_ssh_port=2207 ansible_ssh_host=127.0.0.1
+shard6 ansible_ssh_port=2208 ansible_ssh_host=127.0.0.1
+
+[config_servers]
+config3 ansible_ssh_port=2211 ansible_ssh_host=127.0.0.1
+config2 ansible_ssh_port=2210 ansible_ssh_host=127.0.0.1
+config1 ansible_ssh_port=2209 ansible_ssh_host=127.0.0.1
+
+[query_servers]
+query1 ansible_ssh_port=2212 ansible_ssh_host=127.0.0.1
+query2 ansible_ssh_port=2213 ansible_ssh_host=127.0.0.1

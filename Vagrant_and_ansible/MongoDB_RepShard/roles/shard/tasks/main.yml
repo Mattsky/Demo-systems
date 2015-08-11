@@ -1,0 +1,17 @@
+---
+- name: configure MongoDB config file
+  replace: dest=/etc/mongod.conf regexp='^bind_ip' replace='#bind_ip'
+
+- name: create MongoDB data directory
+  file: path=/data/db state=directory mode=0755 owner=mongod group=mongod
+
+- name: configure repset name for first three servers
+  replace: dest=/etc/mongod.conf regexp='^#replSet.*' replace='replSet=testset1'
+  when: ansible_hostname | match("mongo-data-1-.*")
+
+- name: configure repset name for second three servers
+  replace: dest=/etc/mongod.conf regexp='^#replSet.*' replace='replSet=testset2'
+  when: ansible_hostname | match("mongo-data-2-.*")  
+  
+- name: activate MongoD service on boot, and start it now
+  service: name=mongod enabled=yes state=started

@@ -1,0 +1,76 @@
+---
+- name: Install and configure Mongo on target systems for sharding
+  hosts: all
+  roles:
+  - role: common
+
+- name: Configure shard specific settings
+  hosts: shard_servers
+  roles:
+  - role: shard
+
+- name: Copy replica set prep script to repset1 server
+  hosts: shard3
+  tasks:  
+  - copy: src=prepset1.js dest=/tmp/prepset1.js
+
+- name: Copy replica set init script to repset1 server
+  hosts: shard3
+  tasks:
+  - copy: src=init1.js dest=/tmp/init1.js
+
+- name: Set up replica sets on server group 1
+  hosts: shard3
+  tasks:
+  - shell: mongo /tmp/init1.js
+
+- name: Execute replicate set script on repset1 server
+  hosts: shard3
+  tasks:
+  - shell: mongo /tmp/prepset1.js
+
+- name: Copy replica set prep script to repset2 server
+  hosts: shard6
+  tasks:
+  - copy: src=prepset2.js dest=/tmp/prepset2.js
+
+- name: Copy replica set init script to repset2 server
+  hosts: shard6
+  tasks:
+  - copy: src=init2.js dest=/tmp/init2.js
+
+- name: Set up replica sets on server group 2
+  hosts: shard6
+  tasks:
+  - shell: mongo /tmp/init2.js
+
+- name: Execute replica set script on repset1 server
+  hosts: shard6
+  tasks:
+  - shell: mongo /tmp/prepset2.js
+
+- name: Configure config server specific settings
+  hosts: config_servers
+  roles:
+  - role: config
+
+- name: Configure query router servers
+  hosts: query_servers
+  roles:
+  - role: query
+
+- name: Start up query server mongos instances
+  hosts: query_servers
+  tasks:
+  - service: name=mongos state=started
+
+- name: Copy addshards.js file to query server 2
+  hosts: query2
+  tasks:
+  - copy: src=addshards.js dest=/tmp/addshards.js
+
+- name: Create test data 
+  hosts: query2
+  tasks:  
+  - command: mongo /tmp/addshards.js
+
